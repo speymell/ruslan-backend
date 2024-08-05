@@ -349,7 +349,7 @@ app.post("/expenditure/bydate", checkAuth, async (req, res) => {
     res.status(500).send(err.message);
   }
 });
-app.listen(4444, (err) => {
+app.listen(process.env.PORT || 4444, (err) => {
   if (err) {
     return console.log(err);
   }
