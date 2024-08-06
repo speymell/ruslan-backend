@@ -16,7 +16,7 @@ import WorkedDay from "./models/WorkedDay.js";
 import Expenditure from "./models/Expenditure.js";
 
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGODB_URI) // process.env.MONGODB_URI
   .then(() => console.log("ok"))
   .catch(() => {
     console.log("error");
@@ -234,8 +234,36 @@ app.get("/workedday/:login", checkAuth, async (req, res) => {
   console.log("Получен GET запрос /workedday");
   try {
     const login = req.params.login;
-    const tasks = await WorkedDay.find({ login });
+    const lastSalaryDate = await WorkedDay.findOne({
+      login,
+      salaryReceived: true,
+    }).sort({ createdAt: -1 });
+    const filter = lastSalaryDate
+      ? { login, createdAt: { $gt: lastSalaryDate.createdAt } }
+      : { login };
+    const tasks = await WorkedDay.find(filter);
     res.json(tasks);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+app.post("/pay-salary/:login", checkAuth, async (req, res) => {
+  console.log("Получен POST запрос /pay-salary");
+  try {
+    const login = req.params.login;
+    const lastWorkedDay = await WorkedDay.findOne({ login }).sort({
+      createdAt: -1,
+    });
+    if (!lastWorkedDay) {
+      res
+        .status(404)
+        .send("Не найден последний рабочий день для данного пользователя");
+      return;
+    }
+    lastWorkedDay.salaryReceived = true;
+    await lastWorkedDay.save();
+    res.json({ message: "Зарплата выплачена" });
   } catch (error) {
     res.status(500).send(error.message);
   }
@@ -349,6 +377,9 @@ app.post("/expenditure/bydate", checkAuth, async (req, res) => {
     res.status(500).send(err.message);
   }
 });
+
+//process.env.PORT ||
+
 app.listen(process.env.PORT || 4444, (err) => {
   if (err) {
     return console.log(err);
