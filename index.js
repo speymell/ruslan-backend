@@ -16,7 +16,7 @@ import WorkedDay from "./models/WorkedDay.js";
 import Expenditure from "./models/Expenditure.js";
 
 mongoose
-  .connect(process.env.MONGODB_URI) // process.env.MONGODB_URI
+  .connect("mongodb+srv://admin:123123Z@cluster0.avot3f7.mongodb.net/blog") // process.env.MONGODB_URI
   .then(() => console.log("ok"))
   .catch(() => {
     console.log("error");
